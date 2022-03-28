@@ -1,0 +1,40 @@
+version: '3'
+services:
+  nginx:
+    build:
+      context: ./docker/config/
+      dockerfile: nginx
+    ports:
+      - "8000:8000"
+#      - "443:443"
+    volumes:
+      - .:/var/www:cached
+      - ./docker/config/nginx.conf:/etc/nginx/conf.d/default.conf
+    links:
+        - php
+
+  php:
+    build:
+      args:
+        user: user
+        uid: 1000
+      context: ./docker/config/
+      dockerfile: php
+    volumes:
+      - .:/var/www:cached
+    environment:
+          XDEBUG_CONFIG: "remote_host=${host_lan_ip}"
+          PHP_IDE_CONFIG: "serverName=wpl"
+
+  database:
+    image: mariadb
+    volumes:
+      - ./docker/database:/var/lib/mysql
+      - .:/var/www:cached
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: "${DB_PASSWORD}"
+      MYSQL_DATABASE: "${DB_DATABASE}"
+      MYSQL_USER: "${DB_USERNAME}"
+      MYSQL_PASSWORD: "${DB_PASSWORD}"
